@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Botonera Neón Personalizada</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        neon: {
+                            cyan: '#00f3ff',
+                            pink: '#ff007f',
+                            purple: '#9d00ff',
+                            green: '#00ff66',
+                            yellow: '#ffe600',
+                            orange: '#ff6600'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Animaciones personalizadas para ecualizador y neón */
+        @keyframes barPulse {
+            0%, 100% { height: 20%; }
+            50% { height: 100%; }
+        }
+        .eq-bar {
+            animation: barPulse 0.6s infinite ease-in-out alternate;
+        }
+        .eq-bar:nth-child(1) { animation-delay: 0.1s; }
+        .eq-bar:nth-child(2) { animation-delay: 0.3s; }
+        .eq-bar:nth-child(3) { animation-delay: 0.2s; }
+        .eq-bar:nth-child(4) { animation-delay: 0.4s; }
+
+        /* Scrollbar personalizado */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="h-full font-sans text-slate-100 flex flex-col min-h-screen bg-slate-950 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.15),rgba(255,255,255,0))]">
+
+    <!-- Header / Navbar Principal -->
+    <header class="border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                
+                <!-- Logo & Titulo -->
+                <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-purple-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 text-white font-bold text-xl">
+                            <i class="fa-solid fa-[#ffffff] fa-sliders"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold bg-gradient-to-r from-cyan-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+                                SoundBoard Neón
+                            </h1>
+                            <p class="text-xs text-slate-400">Crea tu propia botonera de sonidos interactiva</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Botón rápido móvil para añadir -->
+                    <button onclick="openModal()" class="md:hidden px-3 py-2 bg-pink-600 hover:bg-pink-500 text-white rounded-lg text-xs font-semibold shadow-lg shadow-pink-500/20 transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Añadir</span>
+                    </button>
+                </div>
+
+                <!-- Controles Centrales / Buscador -->
+                <div class="flex items-center gap-3 w-full md:w-auto flex-1 max-w-md">
+                    <div class="relative w-full">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+                        <input type="text" id="searchInput" oninput="filterSounds()" placeholder="Buscar sonido por nombre o tecla..." 
+                            class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl pl-10 pr-4 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition">
+                    </div>
+                </div>
+
+                <!-- Acciones globales & Volumen -->
+                <div class="flex items-center gap-3 w-full md:w-auto justify-end">
+                    
+                    <!-- Control de Volumen Maestro -->
+                    <div class="flex items-center gap-2 bg-slate-900/80 border border-slate-800 rounded-xl px-3 py-1.5">
+                        <button id="muteBtn" onclick="toggleMute()" class="text-slate-400 hover:text-cyan-400 transition text-sm">
+                            <i id="volumeIcon" class="fa-solid fa-volume-high"></i>
+                        </button>
+                        <input type="range" id="masterVolume" min="0" max="1" step="0.01" value="0.8" oninput="updateMasterVolume(this.value)"
+                            class="w-20 sm:w-24 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-400">
+                    </div>
+
+                    <!-- Botón Detener Todo -->
+                    <button onclick="stopAllSounds()" title="Detener todos los sonidos en reproducción" 
+                        class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-red-400 border border-slate-700/80 rounded-xl text-xs font-medium transition duration-200 flex items-center gap-1.5 active:scale-95">
+                        <i class="fa-solid fa-square"></i>
+                        <span class="hidden sm:inline">Detener</span>
+                    </button>
+
+                    <!-- Botón Agregar Sonido Desktop -->
+                    <button onclick="openModal()" 
+                        class="hidden md:flex px-4 py-2 bg-gradient-to-r from-cyan-500 via-pink-500 to-purple-600 hover:opacity-95 text-white text-xs font-semibold rounded-xl shadow-lg shadow-cyan-500/20 transition-all duration-200 active:scale-95 items-center gap-2">
+                        <i class="fa-solid fa-plus-circle"></i>
+                        <span>+ Añadir Sonido</span>
+                    </button>
+
+                    <!-- Opciones de limpieza -->
+                    <button onclick="clearAllSounds()" title="Borrar todos los sonidos guardados"
+                        class="px-2.5 py-2 bg-slate-800/80 hover:bg-red-950/40 text-slate-400 hover:text-red-400 border border-slate-800 hover:border-red-800/50 rounded-xl text-xs transition">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenedor Principal de Sonidos -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col">
+
+        <!-- Grid de Botones de Sonido -->
+        <div id="soundGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
+            <!-- Se insertan dinámicamente mediante JS -->
+        </div>
+
+        <!-- Estado Vacío (Sin sonidos aún) -->
+        <div id="emptyState" class="hidden flex-1 flex flex-col items-center justify-center py-16 px-4 text-center">
+            <div class="w-20 h-20 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-600 text-3xl mb-4 shadow-inner">
+                <i class="fa-solid fa-file-audio"></i>
+            </div>
+            <h2 class="text-xl font-bold text-slate-200 mb-2">No tienes ningún sonido aún</h2>
+            <p class="text-slate-400 text-sm max-w-md mb-6">Empieza creando tus propios botones personalizados. Puedes subir archivos MP3 de tu PC o pegar direcciones Web de audios.</p>
+            <button onclick="openModal()" class="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white text-sm font-semibold rounded-xl shadow-lg shadow-cyan-500/20 transition transform active:scale-95 flex items-center gap-2">
+                <i class="fa-solid fa-plus"></i>
+                <span>Añadir tu primer sonido</span>
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Modal para Añadir / Editar Sonidos -->
+    <div id="soundModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300 px-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-2xl shadow-2xl p-6 transform scale-95 transition-all duration-300" id="modalContainer">
+            
+            <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
+                <h3 id="modalTitle" class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                    <i class="fa-solid fa-music text-cyan-400"></i>
+                    <span>Añadir Nuevo Sonido</span>
+                </h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="soundForm" onsubmit="handleFormSubmit(event)">
+                <input type="hidden" id="editSoundId">
+
+                <!-- Nombre del Sonido -->
+                <div class="mb-4">
+                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Nombre del botón *</label>
+                    <input type="text" id="soundName" required placeholder="Ej: Aplausos, Risa, Alarma..."
+                        class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-slate-100 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500">
+                </div>
+
+                <!-- Tipo de Fuente del Sonido (Archivo / URL) -->
+                <div class="mb-4">
+                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Origen del Audio *</label>
+                    <div class="grid grid-cols-2 gap-2 mb-3">
+                        <button type="button" id="sourceTypeFile" onclick="setSourceType('file')" 
+                            class="py-2 px-3 text-xs font-medium rounded-xl border border-cyan-500/50 bg-cyan-950/40 text-cyan-300 flex items-center justify-center gap-2 transition">
+                            <i class="fa-solid fa-upload"></i> Subir archivo (MP3)
+                        </button>
+                        <button type="button" id="sourceTypeUrl" onclick="setSourceType('url')" 
+                            class="py-2 px-3 text-xs font-medium rounded-xl border border-slate-700 bg-slate-800 text-slate-400 hover:text-slate-200 flex items-center justify-center gap-2 transition">
+                            <i class="fa-solid fa-link"></i> Enlace Web (URL)
+                        </button>
+                    </div>
+
+                    <!-- Input Archivo Local -->
+                    <div id="fileInputContainer">
+                        <input type="file" id="soundFile" accept="audio/mp3,audio/wav,audio/ogg,audio/mpeg,audio/m4a"
+                            class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-cyan-500/20 file:text-cyan-300 hover:file:bg-cyan-500/30 cursor-pointer bg-slate-800 border border-slate-700 rounded-xl">
+                        <p class="text-[11px] text-slate-500 mt-1.5"><i class="fa-solid fa-circle-info"></i> El archivo se guardará directamente en tu navegador.</p>
+                    </div>
+
+                    <!-- Input URL -->
+                    <div id="urlInputContainer" class="hidden">
+                        <input type="url" id="soundUrl" placeholder="https://ejemplo.com/audio.mp3"
+                            class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-slate-100 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500">
+                        <p class="text-[11px] text-slate-500 mt-1.5"><i class="fa-solid fa-circle-info"></i> Enlace directo a un archivo MP3, WAV u OGG online.</p>
+                    </div>
+                </div>
+
+                <!-- Tecla de acceso rápido y Categoría -->
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Tecla Atajo</label>
+                        <input type="text" id="soundKey" maxlength="1" placeholder="Ej: A, 1, Space"
+                            class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-slate-100 text-center font-mono uppercase focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Icono / Emoji</label>
+                        <select id="soundIcon" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-slate-100 focus:outline-none focus:border-cyan-500">
+                            <option value="fa-music">🎵 Música</option>
+                            <option value="fa-bolt">⚡ Rayo / Efecto</option>
+                            <option value="fa-bullhorn">📢 Megáfono</option>
+                            <option value="fa-face-laugh-squint">😂 Risa</option>
+                            <option value="fa-bell">🔔 Campana</option>
+                            <option value="fa-fire">🔥 Fuego</option>
+                            <option value="fa-bomb">💣 Bomba</option>
+                            <option value="fa-ghost">👻 Fantasma</option>
+                            <option value="fa-gamepad">🎮 Videojuego</option>
+                            <option value="fa-drum">🥁 Tambor</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Color del Botón Neón -->
+                <div class="mb-6">
+                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Estilo de Color Neón</label>
+                    <div class="flex items-center justify-between gap-2 bg-slate-800/50 p-2.5 rounded-xl border border-slate-700/50" id="colorPickerContainer">
+                        <!-- Botones de colores inyectados con JS -->
+                    </div>
+                </div>
+
+                <!-- Botones modal -->
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium rounded-xl transition">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-5 py-2 bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white text-sm font-semibold rounded-xl shadow-md transition transform active:scale-95">
+                        Guardar Sonido
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-900 border border-slate-700 text-slate-200 px-4 py-3 rounded-xl shadow-xl flex items-center gap-3">
+        <i id="toastIcon" class="fa-solid fa-circle-info text-cyan-400"></i>
+        <span id="toastMessage" class="text-sm font-medium">Notificación</span>
+    </div>
+
+    <script>
+        // Definición de Esquemas de Colores Neón disponibles
+        const COLOR_SCHEMES = [
+            { id: 'cyan', name: 'Cian', border: 'border-cyan-500/40', bg: 'bg-cyan-950/30', text: 'text-cyan-400', shadow: 'hover:shadow-cyan-500/20', activeBg: 'bg-cyan-500', activeText: 'text-slate-950', dot: '#00f3ff' },
+            { id: 'pink', name: 'Rosa', border: 'border-pink-500/40', bg: 'bg-pink-950/30', text: 'text-pink-400', shadow: 'hover:shadow-pink-500/20', activeBg: 'bg-pink-500', activeText: 'text-slate-950', dot: '#ff007f' },
+            { id: 'purple', name: 'Púrpura', border: 'border-purple-500/40', bg: 'bg-purple-950/30', text: 'text-purple-400', shadow: 'hover:shadow-purple-500/20', activeBg: 'bg-purple-500', activeText: 'text-white', dot: '#9d00ff' },
+            { id: 'green', name: 'Verde', border: 'border-emerald-500/40', bg: 'bg-emerald-950/30', text: 'text-emerald-400', shadow: 'hover:shadow-emerald-500/20', activeBg: 'bg-emerald-500', activeText: 'text-slate-950', dot: '#00ff66' },
+            { id: 'yellow', name: 'Amarillo', border: 'border-amber-500/40', bg: 'bg-amber-950/30', text: 'text-amber-400', shadow: 'hover:shadow-amber-500/20', activeBg: 'bg-amber-500', activeText: 'text-slate-950', dot: '#ffe600' },
+            { id: 'orange', name: 'Naranja', border: 'border-orange-500/40', bg: 'bg-orange-950/30', text: 'text-orange-400', shadow: 'hover:shadow-orange-500/20', activeBg: 'bg-orange-500', activeText: 'text-slate-950', dot: '#ff6600' }
+        ];
+
+        // Estado Global
+        let sounds = [];
+        let activeAudios = {}; // Almacena instancias de Audio reproducidas
+        let masterVolume = 0.8;
+        let isMuted = false;
+        let previousVolume = 0.8;
+        let selectedColor = 'cyan';
+        let audioSourceType = 'file';
+
+        // Inicialización
+        window.addEventListener('load', () => {
+            loadSounds();
+            renderColorPicker();
+            renderGrid();
+            setupKeyboardListeners();
+        });
+
+        // Cargar sonidos guardados en localStorage
+        function loadSounds() {
+            const stored = localStorage.getItem('user_neon_soundboard_sounds');
+            if (stored) {
+                try {
+                    sounds = JSON.parse(stored);
+                } catch (e) {
+                    console.error("Error al cargar sonidos guardados:", e);
+                    sounds = [];
+                }
+            } else {
+                sounds = [];
+            }
+        }
+
+        // Guardar lista de sonidos en localStorage
+        function saveSounds() {
+            try {
+                localStorage.setItem('user_neon_soundboard_sounds', JSON.stringify(sounds));
+            } catch (e) {
+                console.error("Error guardando en localStorage:", e);
+                showNotification("Atención: El almacenamiento de tu navegador está casi lleno. Intenta con archivos más pequeños.", "error");
+            }
+        }
+
+        // Renderizar Cuadrícula de Sonidos o Estado Vacío
+        function renderGrid(filteredList = null) {
+            const listToRender = filteredList !== null ? filteredList : sounds;
+            const gridContainer = document.getElementById('soundGrid');
+            const emptyState = document.getElementById('emptyState');
+
+            gridContainer.innerHTML = '';
+
+            if (sounds.length === 0) {
+                emptyState.classList.remove('hidden');
+                gridContainer.classList.add('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            gridContainer.classList.remove('hidden');
+
+            if (listToRender.length === 0) {
+                gridContainer.innerHTML = `
+                    <div class="col-span-full py-12 text-center text-slate-500">
+                        <i class="fa-solid fa-magnifying-glass text-2xl mb-2"></i>
+                        <p class="text-sm">No se encontraron sonidos coincidentes con tu búsqueda.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            listToRender.forEach(s => {
+                const colorScheme = COLOR_SCHEMES.find(c => c.id === s.color) || COLOR_SCHEMES[0];
+                const card = document.createElement('div');
+                card.id = `card-${s.id}`;
+                card.className = `group relative rounded-2xl border ${colorScheme.border} ${colorScheme.bg} p-4 flex flex-col justify-between items-center text-center cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-lg ${colorScheme.shadow} active:scale-95 select-none h-36 sm:h-40`;
+                
+                card.onclick = () => playSound(s.id);
+
+                card.innerHTML = `
+                    <!-- Menú de opciones (Modificar / Eliminar) -->
+                    <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 z-10">
+                        <button onclick="event.stopPropagation(); openModal('${s.id}')" 
+                            class="text-slate-400 hover:text-white p-1.5 rounded-lg bg-slate-900/80 hover:bg-slate-800 transition" title="Editar">
+                            <i class="fa-solid fa-pen text-xs"></i>
+                        </button>
+                        <button onclick="event.stopPropagation(); deleteSound('${s.id}')" 
+                            class="text-slate-400 hover:text-red-400 p-1.5 rounded-lg bg-slate-900/80 hover:bg-slate-800 transition" title="Eliminar">
+                            <i class="fa-solid fa-trash text-xs"></i>
+                        </button>
+                    </div>
+
+                    <!-- Insignia Tecla Atajo -->
+                    <div class="absolute top-2.5 left-2.5">
+                        <span class="px-2 py-0.5 rounded-md bg-slate-900/90 border border-slate-700/80 text-[10px] font-mono font-bold text-slate-300">
+                            ${s.key ? s.key.toUpperCase() : '—'}
+                        </span>
+                    </div>
+
+                    <!-- Icono Principal o Animación Ecualizador -->
+                    <div class="mt-4 flex-1 flex items-center justify-center relative w-full">
+                        <i id="icon-${s.id}" class="fa-solid ${s.icon || 'fa-music'} text-2xl sm:text-3xl ${colorScheme.text} transition duration-300"></i>
+                        
+                        <!-- Ecualizador mientras reproduce -->
+                        <div id="eq-${s.id}" class="hidden items-end justify-center gap-1 h-8 w-12">
+                            <span class="w-1 bg-current ${colorScheme.text} rounded-full eq-bar"></span>
+                            <span class="w-1 bg-current ${colorScheme.text} rounded-full eq-bar"></span>
+                            <span class="w-1 bg-current ${colorScheme.text} rounded-full eq-bar"></span>
+                            <span class="w-1 bg-current ${colorScheme.text} rounded-full eq-bar"></span>
+                        </div>
+                    </div>
+
+                    <!-- Nombre del Sonido -->
+                    <div class="w-full">
+                        <h3 class="text-xs sm:text-sm font-semibold text-slate-200 truncate px-1">${escapeHtml(s.name)}</h3>
+                    </div>
+                `;
+
+                gridContainer.appendChild(card);
+            });
+        }
+
+        // Reproducir sonido por ID
+        function playSound(id) {
+            const sound = sounds.find(s => s.id === id);
+            if (!sound || !sound.url) return;
+
+            // Instanciar audio
+            const audio = new Audio(sound.url);
+            audio.volume = isMuted ? 0 : masterVolume;
+
+            if (!activeAudios[id]) {
+                activeAudios[id] = [];
+            }
+            activeAudios[id].push(audio);
+
+            // Efecto visual de reproducción en UI
+            const card = document.getElementById(`card-${id}`);
+            const icon = document.getElementById(`icon-${id}`);
+            const eq = document.getElementById(`eq-${id}`);
+
+            if (card && icon && eq) {
+                const colorScheme = COLOR_SCHEMES.find(c => c.id === sound.color) || COLOR_SCHEMES[0];
+                card.classList.add('ring-2', `ring-${colorScheme.id === 'cyan' ? 'cyan-400' : 'pink-500'}`);
+                icon.classList.add('hidden');
+                eq.classList.remove('hidden');
+                eq.classList.add('flex');
+            }
+
+            audio.play().catch(err => {
+                console.error("Error reproduciendo el audio:", err);
+                showNotification("Error reproduciendo audio. Verifica que el archivo o enlace sea válido.", "error");
+            });
+
+            audio.onended = () => {
+                if (activeAudios[id]) {
+                    activeAudios[id] = activeAudios[id].filter(a => a !== audio);
+                    if (activeAudios[id].length === 0) {
+                        delete activeAudios[id];
+                        // Restaurar icono original
+                        if (card && icon && eq) {
+                            card.classList.remove('ring-2', 'ring-cyan-400', 'ring-pink-500');
+                            icon.classList.remove('hidden');
+                            eq.classList.add('hidden');
+                            eq.classList.remove('flex');
+                        }
+                    }
+                }
+            };
+        }
+
+        // Detener todos los sonidos activos
+        function stopAllSounds() {
+            Object.keys(activeAudios).forEach(id => {
+                activeAudios[id].forEach(audio => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                });
+                
+                const card = document.getElementById(`card-${id}`);
+                const icon = document.getElementById(`icon-${id}`);
+                const eq = document.getElementById(`eq-${id}`);
+                if (card && icon && eq) {
+                    card.classList.remove('ring-2', 'ring-cyan-400', 'ring-pink-500');
+                    icon.classList.remove('hidden');
+                    eq.classList.add('hidden');
+                    eq.classList.remove('flex');
+                }
+            });
+            activeAudios = {};
+        }
+
+        // Control de volumen maestro
+        function updateMasterVolume(val) {
+            masterVolume = parseFloat(val);
+            isMuted = masterVolume === 0;
+            updateVolumeUI();
+            
+            // Actualizar audios sonando actualmente
+            Object.values(activeAudios).flat().forEach(audio => {
+                audio.volume = masterVolume;
+            });
+        }
+
+        function toggleMute() {
+            if (isMuted) {
+                isMuted = false;
+                masterVolume = previousVolume || 0.8;
+            } else {
+                previousVolume = masterVolume;
+                isMuted = true;
+                masterVolume = 0;
+            }
+            document.getElementById('masterVolume').value = masterVolume;
+            updateMasterVolume(masterVolume);
+        }
+
+        function updateVolumeUI() {
+            const volumeIcon = document.getElementById('volumeIcon');
+            if (isMuted || masterVolume === 0) {
+                volumeIcon.className = "fa-solid fa-volume-xmark text-red-400";
+            } else if (masterVolume < 0.5) {
+                volumeIcon.className = "fa-solid fa-volume-low text-cyan-400";
+            } else {
+                volumeIcon.className = "fa-solid fa-volume-high text-cyan-400";
+            }
+        }
+
+        // Atajos de teclado
+        function setupKeyboardListeners() {
+            window.addEventListener('keydown', (e) => {
+                // Ignorar si el usuario está escribiendo en un input
+                if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+                    return;
+                }
+                
+                const key = e.key.toUpperCase();
+                const matchedSound = sounds.find(s => s.key && s.key.toUpperCase() === key);
+                if (matchedSound) {
+                    e.preventDefault();
+                    playSound(matchedSound.id);
+                }
+            });
+        }
+
+        // Filtrado por buscador
+        function filterSounds() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            if (!query) {
+                renderGrid();
+                return;
+            }
+            const filtered = sounds.filter(s => 
+                s.name.toLowerCase().includes(query) || 
+                (s.key && s.key.toLowerCase() === query)
+            );
+            renderGrid(filtered);
+        }
+
+        // Modal: Abrir / Cerrar
+        function openModal(editId = null) {
+            const modal = document.getElementById('soundModal');
+            const modalContainer = document.getElementById('modalContainer');
+            const form = document.getElementById('soundForm');
+            
+            form.reset();
+            document.getElementById('editSoundId').value = '';
+            setSourceType('file');
+
+            if (editId) {
+                const s = sounds.find(item => item.id === editId);
+                if (s) {
+                    document.getElementById('modalTitle').innerHTML = `<i class="fa-solid fa-pen-to-square text-cyan-400"></i><span>Editar Sonido</span>`;
+                    document.getElementById('editSoundId').value = s.id;
+                    document.getElementById('soundName').value = s.name;
+                    document.getElementById('soundKey').value = s.key || '';
+                    document.getElementById('soundIcon').value = s.icon || 'fa-music';
+                    selectColor(s.color || 'cyan');
+                    setSourceType('url');
+                    document.getElementById('soundUrl').value = s.url || '';
+                }
+            } else {
+                document.getElementById('modalTitle').innerHTML = `<i class="fa-solid fa-music text-cyan-400"></i><span>Añadir Nuevo Sonido</span>`;
+                selectColor('cyan');
+            }
+
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modalContainer.classList.remove('scale-95');
+            modalContainer.classList.add('scale-100');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('soundModal');
+            const modalContainer = document.getElementById('modalContainer');
+            modalContainer.classList.remove('scale-100');
+            modalContainer.classList.add('scale-95');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+        }
+
+        // Tipo de fuente: Archivo / URL
+        function setSourceType(type) {
+            audioSourceType = type;
+            const btnFile = document.getElementById('sourceTypeFile');
+            const btnUrl = document.getElementById('sourceTypeUrl');
+            const containerFile = document.getElementById('fileInputContainer');
+            const containerUrl = document.getElementById('urlInputContainer');
+
+            if (type === 'file') {
+                btnFile.className = "py-2 px-3 text-xs font-medium rounded-xl border border-cyan-500/50 bg-cyan-950/40 text-cyan-300 flex items-center justify-center gap-2 transition";
+                btnUrl.className = "py-2 px-3 text-xs font-medium rounded-xl border border-slate-700 bg-slate-800 text-slate-400 hover:text-slate-200 flex items-center justify-center gap-2 transition";
+                containerFile.classList.remove('hidden');
+                containerUrl.classList.add('hidden');
+            } else {
+                btnUrl.className = "py-2 px-3 text-xs font-medium rounded-xl border border-cyan-500/50 bg-cyan-950/40 text-cyan-300 flex items-center justify-center gap-2 transition";
+                btnFile.className = "py-2 px-3 text-xs font-medium rounded-xl border border-slate-700 bg-slate-800 text-slate-400 hover:text-slate-200 flex items-center justify-center gap-2 transition";
+                containerUrl.classList.remove('hidden');
+                containerFile.classList.add('hidden');
+            }
+        }
+
+        // Renderizar selector de color neón
+        function renderColorPicker() {
+            const container = document.getElementById('colorPickerContainer');
+            container.innerHTML = '';
+            COLOR_SCHEMES.forEach(c => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `w-7 h-7 rounded-full transition transform hover:scale-110 flex items-center justify-center border-2 ${selectedColor === c.id ? 'border-white scale-110' : 'border-transparent'}`;
+                btn.style.backgroundColor = c.dot;
+                btn.onclick = () => selectColor(c.id);
+                container.appendChild(btn);
+            });
+        }
+
+        function selectColor(colorId) {
+            selectedColor = colorId;
+            renderColorPicker();
+        }
+
+        // Form Submit Handler
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+
+            const editId = document.getElementById('editSoundId').value;
+            const name = document.getElementById('soundName').value.trim();
+            const key = document.getElementById('soundKey').value.trim().toUpperCase();
+            const icon = document.getElementById('soundIcon').value;
+            let audioUrl = document.getElementById('soundUrl').value.trim();
+
+            if (audioSourceType === 'file') {
+                const fileInput = document.getElementById('soundFile');
+                if (fileInput.files && fileInput.files[0]) {
+                    try {
+                        audioUrl = await readFileAsDataURL(fileInput.files[0]);
+                    } catch (err) {
+                        showNotification("Error procesando el archivo de audio.", "error");
+                        return;
+                    }
+                }
+            }
+
+            if (!audioUrl && !editId) {
+                showNotification("Por favor selecciona un archivo de audio o introduce una URL.", "error");
+                return;
+            }
+
+            if (editId) {
+                const index = sounds.findIndex(s => s.id === editId);
+                if (index !== -1) {
+                    sounds[index] = {
+                        ...sounds[index],
+                        name,
+                        key,
+                        icon,
+                        color: selectedColor,
+                        url: audioUrl || sounds[index].url
+                    };
+                }
+            } else {
+                const newSound = {
+                    id: 's_' + Date.now(),
+                    name,
+                    key: key || getNextAvailableKey(),
+                    icon,
+                    color: selectedColor,
+                    url: audioUrl
+                };
+                sounds.unshift(newSound);
+            }
+
+            saveSounds();
+            renderGrid();
+            closeModal();
+            showNotification(editId ? "Sonido actualizado correctamente." : "Nuevo sonido guardado.");
+        }
+
+        // Leer archivo a Base64
+        function readFileAsDataURL(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Asignar tecla de atajo libre por defecto
+        function getNextAvailableKey() {
+            const usedKeys = sounds.map(s => s.key ? s.key.toUpperCase() : '');
+            const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789".split('');
+            return alphabet.find(k => !usedKeys.includes(k)) || '';
+        }
+
+        // Eliminar Sonido
+        function deleteSound(id) {
+            if (confirm("¿Seguro que quieres eliminar este sonido?")) {
+                sounds = sounds.filter(s => s.id !== id);
+                if (activeAudios[id]) {
+                    activeAudios[id].forEach(a => a.pause());
+                    delete activeAudios[id];
+                }
+                saveSounds();
+                renderGrid();
+                showNotification("Sonido eliminado.");
+            }
+        }
+
+        // Borrar todos los sonidos
+        function clearAllSounds() {
+            if (sounds.length === 0) return;
+            if (confirm("¿Estás seguro de que deseas eliminar TODOS tus sonidos guardados? Esta acción no se puede deshacer.")) {
+                stopAllSounds();
+                sounds = [];
+                saveSounds();
+                renderGrid();
+                showNotification("Se han eliminado todos los sonidos.");
+            }
+        }
+
+        // Mostrar Notificación Toast
+        function showNotification(msg, type = "info") {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMsg.innerText = msg;
+            if (type === "error") {
+                toastIcon.className = "fa-solid fa-circle-exclamation text-red-400";
+            } else {
+                toastIcon.className = "fa-solid fa-circle-check text-cyan-400";
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // Escapar HTML seguro
+        function escapeHtml(str) {
+            return str.replace(/[&<>"']/g, function(m) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+            });
+        }
+    </script>
+</body>
+</html>
